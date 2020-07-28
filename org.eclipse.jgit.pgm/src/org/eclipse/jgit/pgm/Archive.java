@@ -46,8 +46,6 @@ class Archive extends TextBuiltin {
 	protected void run() throws Exception {
 		if (tree == null)
 			throw die(CLIText.get().treeIsRequired);
-
-		OutputStream stream = null;
 		try {
 			if (output != null)
 				stream = new FileOutputStream(output);

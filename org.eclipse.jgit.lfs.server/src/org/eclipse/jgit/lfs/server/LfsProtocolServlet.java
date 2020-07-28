@@ -168,49 +168,43 @@ public abstract class LfsProtocolServlet extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse res)
 			throws ServletException, IOException {
-		Writer w = new BufferedWriter(
-				new OutputStreamWriter(res.getOutputStream(), UTF_8));
-
-		Reader r = new BufferedReader(
-				new InputStreamReader(req.getInputStream(), UTF_8));
-		LfsRequest request = LfsGson.fromJson(r, LfsRequest.class);
-		String path = req.getPathInfo();
-
-		res.setContentType(CONTENTTYPE_VND_GIT_LFS_JSON);
-		LargeFileRepository repo = null;
-		try {
-			repo = getLargeFileRepository(request, path,
-					req.getHeader(HDR_AUTHORIZATION));
-			if (repo == null) {
-				String error = MessageFormat
-						.format(LfsText.get().lfsFailedToGetRepository, path);
-				LOG.error(error);
-				throw new LfsException(error);
+		try (java.io.Writer w = new java.io.BufferedWriter(new java.io.OutputStreamWriter(res.getOutputStream(), java.nio.charset.StandardCharsets.UTF_8))) {
+			java.io.Reader r = new java.io.BufferedReader(new java.io.InputStreamReader(req.getInputStream(), java.nio.charset.StandardCharsets.UTF_8));
+			org.eclipse.jgit.lfs.server.LfsProtocolServlet.LfsRequest request = org.eclipse.jgit.lfs.server.internal.LfsGson.fromJson(r, org.eclipse.jgit.lfs.server.LfsProtocolServlet.LfsRequest.class);
+			java.lang.String path = req.getPathInfo();
+			res.setContentType(org.eclipse.jgit.lfs.server.LfsProtocolServlet.CONTENTTYPE_VND_GIT_LFS_JSON);
+			org.eclipse.jgit.lfs.server.LargeFileRepository repo = null;
+			try {
+				repo = getLargeFileRepository(request, path, req.getHeader(org.eclipse.jgit.util.HttpSupport.HDR_AUTHORIZATION));
+				if (repo == null) {
+					java.lang.String error = java.text.MessageFormat.format(org.eclipse.jgit.lfs.internal.LfsText.get().lfsFailedToGetRepository, path);
+					org.eclipse.jgit.lfs.server.LfsProtocolServlet.LOG.error(error);
+					throw new org.eclipse.jgit.lfs.errors.LfsException(error);
+				}
+				res.setStatus(org.apache.http.HttpStatus.SC_OK);
+				org.eclipse.jgit.lfs.server.TransferHandler handler = org.eclipse.jgit.lfs.server.TransferHandler.forOperation(request.operation, repo, request.objects);
+				org.eclipse.jgit.lfs.server.internal.LfsGson.toJson(handler.process(), w);
+			} catch (org.eclipse.jgit.lfs.errors.LfsValidationError e) {
+				sendError(res, w, org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY, e.getMessage());
+			} catch (org.eclipse.jgit.lfs.errors.LfsRepositoryNotFound e) {
+				sendError(res, w, org.apache.http.HttpStatus.SC_NOT_FOUND, e.getMessage());
+			} catch (org.eclipse.jgit.lfs.errors.LfsRepositoryReadOnly e) {
+				sendError(res, w, org.apache.http.HttpStatus.SC_FORBIDDEN, e.getMessage());
+			} catch (org.eclipse.jgit.lfs.errors.LfsRateLimitExceeded e) {
+				sendError(res, w, org.eclipse.jgit.lfs.server.LfsProtocolServlet.SC_RATE_LIMIT_EXCEEDED, e.getMessage());
+			} catch (org.eclipse.jgit.lfs.errors.LfsBandwidthLimitExceeded e) {
+				sendError(res, w, org.eclipse.jgit.lfs.server.LfsProtocolServlet.SC_BANDWIDTH_LIMIT_EXCEEDED, e.getMessage());
+			} catch (org.eclipse.jgit.lfs.errors.LfsInsufficientStorage e) {
+				sendError(res, w, org.apache.http.HttpStatus.SC_INSUFFICIENT_STORAGE, e.getMessage());
+			} catch (org.eclipse.jgit.lfs.errors.LfsUnavailable e) {
+				sendError(res, w, org.apache.http.HttpStatus.SC_SERVICE_UNAVAILABLE, e.getMessage());
+			} catch (org.eclipse.jgit.lfs.errors.LfsUnauthorized e) {
+				sendError(res, w, org.apache.http.HttpStatus.SC_UNAUTHORIZED, e.getMessage());
+			} catch (org.eclipse.jgit.lfs.errors.LfsException e) {
+				sendError(res, w, org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			} finally {
+				w.flush();
 			}
-			res.setStatus(SC_OK);
-			TransferHandler handler = TransferHandler
-					.forOperation(request.operation, repo, request.objects);
-			LfsGson.toJson(handler.process(), w);
-		} catch (LfsValidationError e) {
-			sendError(res, w, SC_UNPROCESSABLE_ENTITY, e.getMessage());
-		} catch (LfsRepositoryNotFound e) {
-			sendError(res, w, SC_NOT_FOUND, e.getMessage());
-		} catch (LfsRepositoryReadOnly e) {
-			sendError(res, w, SC_FORBIDDEN, e.getMessage());
-		} catch (LfsRateLimitExceeded e) {
-			sendError(res, w, SC_RATE_LIMIT_EXCEEDED, e.getMessage());
-		} catch (LfsBandwidthLimitExceeded e) {
-			sendError(res, w, SC_BANDWIDTH_LIMIT_EXCEEDED, e.getMessage());
-		} catch (LfsInsufficientStorage e) {
-			sendError(res, w, SC_INSUFFICIENT_STORAGE, e.getMessage());
-		} catch (LfsUnavailable e) {
-			sendError(res, w, SC_SERVICE_UNAVAILABLE, e.getMessage());
-		} catch (LfsUnauthorized e) {
-			sendError(res, w, SC_UNAUTHORIZED, e.getMessage());
-		} catch (LfsException e) {
-			sendError(res, w, SC_INTERNAL_SERVER_ERROR, e.getMessage());
-		} finally {
-			w.flush();
 		}
 	}
 

@@ -109,25 +109,29 @@ class TransportGitAnon extends TcpTransport implements PackTransport {
 	Socket openConnection() throws TransportException {
 		final int tms = getTimeout() > 0 ? getTimeout() * 1000 : 0;
 		final int port = uri.getPort() > 0 ? uri.getPort() : GIT_PORT;
-		@SuppressWarnings("resource") // Closed by the caller
-		final Socket s = new Socket();
-		try {
-			final InetAddress host = InetAddress.getByName(uri.getHost());
-			s.bind(null);
-			s.connect(new InetSocketAddress(host, port), tms);
-		} catch (IOException c) {
+		try (// Closed by the caller
+		@java.lang.SuppressWarnings("resource")
+		final java.net.Socket s = new java.net.Socket()) {
 			try {
-				s.close();
-			} catch (IOException closeErr) {
-				// ignore a failure during close, we're already failing
+				final java.net.InetAddress host = java.net.InetAddress.getByName(uri.getHost());
+				s.bind(null);
+				s.connect(new java.net.InetSocketAddress(host, port), tms);
+			} catch (java.io.IOException c) {
+				try {
+					s.close();
+				} catch (java.io.IOException closeErr) {
+					// ignore a failure during close, we're already failing
+				}
+				if (c instanceof java.net.UnknownHostException) {
+					throw new org.eclipse.jgit.errors.TransportException(uri, org.eclipse.jgit.internal.JGitText.get().unknownHost);
+				}
+				if (c instanceof java.net.ConnectException) {
+					throw new org.eclipse.jgit.errors.TransportException(uri, c.getMessage());
+				}
+				throw new org.eclipse.jgit.errors.TransportException(uri, c.getMessage(), c);
 			}
-			if (c instanceof UnknownHostException)
-				throw new TransportException(uri, JGitText.get().unknownHost);
-			if (c instanceof ConnectException)
-				throw new TransportException(uri, c.getMessage());
-			throw new TransportException(uri, c.getMessage(), c);
+			return s;
 		}
-		return s;
 	}
 
 	void service(String name, PacketLineOut pckOut)

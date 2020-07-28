@@ -77,7 +77,7 @@ final class DeltaWindow {
 		res = DeltaWindowEntry.createWindow(config.getDeltaSearchWindowSize());
 	}
 
-	synchronized DeltaTask.Slice remaining() {
+	synchronized org.eclipse.jgit.internal.storage.pack.DeltaTask.Slice remaining() {
 		int e = end;
 		int halfRemaining = (e - cur) >>> 1;
 		if (0 == halfRemaining)
@@ -320,19 +320,18 @@ final class DeltaWindow {
 
 	private void cacheDelta(ObjectToPack srcObj, ObjectToPack resObj) {
 		if (deltaCache.canCache(deltaLen, srcObj, resObj)) {
-			try {
-				byte[] zbuf = new byte[deflateBound(deltaLen)];
-				ZipStream zs = new ZipStream(deflater(), zbuf);
+			try (org.eclipse.jgit.internal.storage.pack.DeltaWindow.ZipStream zs = new org.eclipse.jgit.internal.storage.pack.DeltaWindow.ZipStream(deflater(), zbuf)) {
+				byte[] zbuf = new byte[org.eclipse.jgit.internal.storage.pack.DeltaWindow.deflateBound(deltaLen)];
 				if (deltaBuf instanceof byte[])
-					zs.write((byte[]) deltaBuf, 0, deltaLen);
+					zs.write(((byte[]) (deltaBuf)), 0, deltaLen);
 				else
-					((TemporaryBuffer.Heap) deltaBuf).writeTo(zs, null);
+					((org.eclipse.jgit.util.TemporaryBuffer.Heap) (deltaBuf)).writeTo(zs, null);
+
 				deltaBuf = null;
 				int len = zs.finish();
-
 				resObj.setCachedDelta(deltaCache.cache(zbuf, len, deltaLen));
 				resObj.setCachedSize(deltaLen);
-			} catch (IOException | OutOfMemoryError err) {
+			} catch (java.io.IOException | java.lang.OutOfMemoryError err) {
 				deltaCache.credit(deltaLen);
 			}
 		}

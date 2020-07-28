@@ -221,28 +221,27 @@ public class UnionInputStreamTest {
 
 	@Test
 	public void testNonBlockingPartialRead() throws Exception {
-		InputStream errorReadStream = new InputStream() {
-			@Override
-			public int read() throws IOException {
-				throw new IOException("Expected");
+		try (java.io.InputStream errorReadStream = new java.io.InputStream() {
+			@java.lang.Override
+			public int read() throws java.io.IOException {
+				throw new java.io.IOException("Expected");
 			}
 
-			@Override
-			public int read(byte b[], int off, int len) throws IOException {
-				throw new IOException("Expected");
+			@java.lang.Override
+			public int read(byte[] b, int off, int len) throws java.io.IOException {
+				throw new java.io.IOException("Expected");
 			}
-		};
-		try (UnionInputStream u = new UnionInputStream(
-				new ByteArrayInputStream(new byte[] { 1, 2, 3 }),
-				errorReadStream)) {
-			byte buf[] = new byte[10];
-			assertEquals(3, u.read(buf, 0, 10));
-			assertTrue(Arrays.equals(new byte[] { 1, 2, 3 }, slice(buf, 3)));
-			try {
-				u.read(buf, 0, 1);
-				fail("Expected exception from errorReadStream");
-			} catch (IOException e) {
-				assertEquals("Expected", e.getMessage());
+		}) {
+			try (final org.eclipse.jgit.util.io.UnionInputStream u = new org.eclipse.jgit.util.io.UnionInputStream(new java.io.ByteArrayInputStream(new byte[]{ 1, 2, 3 }), errorReadStream)) {
+				byte[] buf = new byte[10];
+				org.junit.Assert.assertEquals(3, u.read(buf, 0, 10));
+				org.junit.Assert.assertTrue(java.util.Arrays.equals(new byte[]{ 1, 2, 3 }, org.eclipse.jgit.util.io.UnionInputStreamTest.slice(buf, 3)));
+				try {
+					u.read(buf, 0, 1);
+					org.junit.Assert.fail("Expected exception from errorReadStream");
+				} catch (java.io.IOException e) {
+					org.junit.Assert.assertEquals("Expected", e.getMessage());
+				}
 			}
 		}
 	}

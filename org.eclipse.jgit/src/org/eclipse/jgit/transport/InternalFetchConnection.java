@@ -43,29 +43,20 @@ class InternalFetchConnection<C> extends BasePackFetchConnection {
 			final UploadPackFactory<C> uploadPackFactory,
 			final C req, final Repository remote) throws TransportException {
 		super(transport);
-
-		final PipedInputStream in_r;
-		final PipedOutputStream in_w;
-
-		final PipedInputStream out_r;
 		final PipedOutputStream out_w;
-		try {
-			in_r = new PipedInputStream();
-			in_w = new PipedOutputStream(in_r);
-
-			out_r = new PipedInputStream() {
-				// The client (BasePackFetchConnection) can write
-				// a huge burst before it reads again. We need to
-				// force the buffer to be big enough, otherwise it
-				// will deadlock both threads.
-				{
-					buffer = new byte[MIN_CLIENT_BUFFER];
-				}
-			};
-			out_w = new PipedOutputStream(out_r);
-		} catch (IOException err) {
+		try (final java.io.PipedInputStream out_r = new java.io.PipedInputStream() {
+			// The client (BasePackFetchConnection) can write
+			// a huge burst before it reads again. We need to
+			// force the buffer to be big enough, otherwise it
+			// will deadlock both threads.
+			{
+				buffer = new byte[org.eclipse.jgit.transport.BasePackFetchConnection.MIN_CLIENT_BUFFER];
+			}
+		}) {
+			out_w = new java.io.PipedOutputStream(out_r);
+		} catch (java.io.IOException err) {
 			remote.close();
-			throw new TransportException(uri, JGitText.get().cannotConnectPipes, err);
+			throw new org.eclipse.jgit.errors.TransportException(uri, org.eclipse.jgit.internal.JGitText.get().cannotConnectPipes, err);
 		}
 
 		worker = new Thread("JGit-Upload-Pack") { //$NON-NLS-1$

@@ -678,43 +678,39 @@ public class PackInserter extends ObjectInserter {
 					throws MissingObjectException, IOException {
 				int bufsz = buffer().length;
 				packOut.seek(pos);
+				try (java.io.InputStream fileStream = new java.io.FilterInputStream(java.nio.channels.Channels.newInputStream(packOut.file.getChannel())) {
+					// atEnd was already set to false by the previous seek, but it's
+					// technically possible for a caller to call insert on the
+					// inserter in the middle of reading from this stream. Behavior is
+					// undefined in this case, so it would arguably be ok to ignore,
+					// but it's not hard to at least make an attempt to not corrupt
+					// the data.
+					@java.lang.Override
+					public int read() throws java.io.IOException {
+						packOut.atEnd = false;
+						return super.read();
+					}
 
-				InputStream fileStream = new FilterInputStream(
-						Channels.newInputStream(packOut.file.getChannel())) {
-							// atEnd was already set to false by the previous seek, but it's
-							// technically possible for a caller to call insert on the
-							// inserter in the middle of reading from this stream. Behavior is
-							// undefined in this case, so it would arguably be ok to ignore,
-							// but it's not hard to at least make an attempt to not corrupt
-							// the data.
-							@Override
-							public int read() throws IOException {
-								packOut.atEnd = false;
-								return super.read();
-							}
+					@java.lang.Override
+					public int read(byte[] b) throws java.io.IOException {
+						packOut.atEnd = false;
+						return super.read(b);
+					}
 
-							@Override
-							public int read(byte[] b) throws IOException {
-								packOut.atEnd = false;
-								return super.read(b);
-							}
+					@java.lang.Override
+					public int read(byte[] b, int off, int len) throws java.io.IOException {
+						packOut.atEnd = false;
+						return super.read(b, off, len);
+					}
 
-							@Override
-							public int read(byte[] b, int off, int len) throws IOException {
-								packOut.atEnd = false;
-								return super.read(b,off,len);
-							}
-
-							@Override
-							public void close() {
-								// Never close underlying RandomAccessFile, which lasts the
-								// lifetime of the enclosing PackStream.
-							}
-						};
-				return new ObjectStream.Filter(
-						type, size,
-						new BufferedInputStream(
-								new InflaterInputStream(fileStream, inflater(), bufsz), bufsz));
+					@java.lang.Override
+					public void close() {
+						// Never close underlying RandomAccessFile, which lasts the
+						// lifetime of the enclosing PackStream.
+					}
+				}) {
+					return new org.eclipse.jgit.lib.ObjectStream.Filter(type, size, new java.io.BufferedInputStream(new java.util.zip.InflaterInputStream(fileStream, inflater(), bufsz), bufsz));
+				}
 			}
 
 			@Override

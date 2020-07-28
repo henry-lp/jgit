@@ -324,17 +324,18 @@ public class Daemon {
 		if (acceptThread != null) {
 			throw new IllegalStateException(JGitText.get().daemonAlreadyRunning);
 		}
-		ServerSocket socket = new ServerSocket();
-		socket.setReuseAddress(true);
-		if (myAddress != null) {
-			socket.bind(myAddress, BACKLOG);
-		} else {
-			socket.bind(new InetSocketAddress((InetAddress) null, 0), BACKLOG);
-		}
-		myAddress = (InetSocketAddress) socket.getLocalSocketAddress();
+		try (java.net.ServerSocket socket = new java.net.ServerSocket()) {
+			socket.setReuseAddress(true);
+			if (myAddress != null) {
+				socket.bind(myAddress, org.eclipse.jgit.transport.Daemon.BACKLOG);
+			} else {
+				socket.bind(new java.net.InetSocketAddress(((java.net.InetAddress) (null)), 0), org.eclipse.jgit.transport.Daemon.BACKLOG);
+			}
+			myAddress = ((java.net.InetSocketAddress) (socket.getLocalSocketAddress()));
+			acceptThread = new org.eclipse.jgit.transport.Daemon.Acceptor(processors, "Git-Daemon-Accept", socket);// $NON-NLS-1$
 
-		acceptThread = new Acceptor(processors, "Git-Daemon-Accept", socket); //$NON-NLS-1$
-		acceptThread.start();
+			acceptThread.start();
+		}
 	}
 
 	private synchronized void clearThread() {

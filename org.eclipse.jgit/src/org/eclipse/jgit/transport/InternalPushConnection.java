@@ -44,21 +44,12 @@ class InternalPushConnection<C> extends BasePackPushConnection {
 			final ReceivePackFactory<C> receivePackFactory,
 			final C req, final Repository remote) throws TransportException {
 		super(transport);
-
-		final PipedInputStream in_r;
-		final PipedOutputStream in_w;
-
-		final PipedInputStream out_r;
 		final PipedOutputStream out_w;
-		try {
-			in_r = new PipedInputStream();
-			in_w = new PipedOutputStream(in_r);
-
-			out_r = new PipedInputStream();
-			out_w = new PipedOutputStream(out_r);
-		} catch (IOException err) {
+		try (final java.io.PipedInputStream out_r = new java.io.PipedInputStream()) {
+			out_w = new java.io.PipedOutputStream(out_r);
+		} catch (java.io.IOException err) {
 			remote.close();
-			throw new TransportException(uri, JGitText.get().cannotConnectPipes, err);
+			throw new org.eclipse.jgit.errors.TransportException(uri, org.eclipse.jgit.internal.JGitText.get().cannotConnectPipes, err);
 		}
 
 		worker = new Thread("JGit-Receive-Pack") { //$NON-NLS-1$

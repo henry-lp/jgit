@@ -85,15 +85,15 @@ public class RegexPipelineTest extends HttpTestCase {
 		protected void doGet(HttpServletRequest req, HttpServletResponse res)
 				throws IOException {
 			res.setStatus(200);
-			PrintWriter out = new PrintWriter(new BufferedWriter(
-					new OutputStreamWriter(res.getOutputStream(), UTF_8)));
-			out.write(name);
-			out.write("\n");
-			out.write(String.valueOf(req.getServletPath()));
-			out.write("\n");
-			out.write(String.valueOf(req.getPathInfo()));
-			out.write("\n");
-			out.flush();
+			try (java.io.PrintWriter out = new java.io.PrintWriter(new java.io.BufferedWriter(new java.io.OutputStreamWriter(res.getOutputStream(), java.nio.charset.StandardCharsets.UTF_8)))) {
+				out.write(name);
+				out.write("\n");
+				out.write(java.lang.String.valueOf(req.getServletPath()));
+				out.write("\n");
+				out.write(java.lang.String.valueOf(req.getPathInfo()));
+				out.write("\n");
+				out.flush();
+			}
 		}
 	}
 
