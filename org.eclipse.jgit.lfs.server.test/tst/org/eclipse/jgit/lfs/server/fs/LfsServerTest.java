@@ -59,7 +59,7 @@ import org.junit.Before;
 
 public abstract class LfsServerTest {
 
-	private static final long timeout = /* 10 sec */ 10 * 1000;
+	private static final long timeout = /* 10 sec */ (long) 10 * 1000;
 
 	protected static final int MiB = 1024 * 1024;
 

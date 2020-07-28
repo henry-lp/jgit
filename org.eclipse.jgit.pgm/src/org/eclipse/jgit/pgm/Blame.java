@@ -132,7 +132,7 @@ class Blame extends TextBuiltin {
 		}
 
 		try (ObjectReader reader = db.newObjectReader();
-				BlameGenerator generator = new BlameGenerator(db, file)) {
+				BlameGenerator generator = new BlameGenerator(db, file);org.eclipse.jgit.blame.BlameGenerator generator = new org.eclipse.jgit.blame.BlameGenerator(db, file)) {
 			RevFlag scanned = generator.newFlag("SCANNED"); //$NON-NLS-1$
 			generator.setTextComparator(comparator);
 
@@ -197,10 +197,8 @@ class Blame extends TextBuiltin {
 			}
 
 			String pathFmt = MessageFormat.format(" %{0}s", valueOf(pathWidth)); //$NON-NLS-1$
-			String numFmt = MessageFormat.format(" %{0}d", //$NON-NLS-1$
-					valueOf(1 + (int) Math.log10(maxSourceLine + 1)));
-			String lineFmt = MessageFormat.format(" %{0}d) ", //$NON-NLS-1$
-					valueOf(1 + (int) Math.log10(end + 1)));
+			String numFmt = MessageFormat.format(" %{0}d", java.lang.Integer.valueOf(1 + ((int) (java.lang.Math.log10((double) maxSourceLine + 1)))));
+			String lineFmt = MessageFormat.format(" %{0}d) ", java.lang.Integer.valueOf(1 + ((int) (java.lang.Math.log10((double) end + 1)))));
 			String authorFmt = MessageFormat.format(" (%-{0}s %{1}s", //$NON-NLS-1$
 					valueOf(authorWidth), valueOf(dateWidth));
 

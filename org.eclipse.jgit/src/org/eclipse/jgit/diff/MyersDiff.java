@@ -270,17 +270,35 @@ public class MyersDiff<S extends Sequence> {
 		EditPaths forward = new ForwardEditPaths();
 		EditPaths backward = new BackwardEditPaths();
 
+		protected int beginA;
+
+		protected int endA;
+
+		protected int beginB;
+
 		/* Some variables which are shared between methods */
-		protected int beginA, endA, beginB, endB;
+		protected int endB;
 		protected Edit edit;
 
 		abstract class EditPaths {
 			private IntList x = new IntList();
 			private LongList snake = new LongList();
-			int beginK, endK, middleK;
-			int prevBeginK, prevEndK;
+
+			int beginK;
+
+			int endK;
+
+			int middleK;
+
+			int prevBeginK;
+
+			int prevEndK;
+
+			int minK;
+
 			/* if we hit one end early, no need to look further */
-			int minK, maxK; // TODO: better explanation
+			int maxK;// TODO: better explanation
+			
 
 			final int getIndex(int d, int k) {
 // TODO: remove
@@ -330,7 +348,7 @@ if (k < beginK || k > endK)
 			abstract boolean meets(int d, int k, int x, long snake);
 
 			final long newSnake(int k, int x) {
-				long y = k + x;
+				long y = (long) k + x;
 				long ret = ((long) x) << 32;
 				return ret | y;
 			}

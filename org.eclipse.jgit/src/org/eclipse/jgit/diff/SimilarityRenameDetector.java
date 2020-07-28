@@ -383,7 +383,7 @@ class SimilarityRenameDetector {
 		// later in the table. This permits us to break ties favoring
 		// earlier names over later ones.
 		//
-		return INDEX_MASK - idx;
+		return (long) org.eclipse.jgit.diff.SimilarityRenameDetector.INDEX_MASK - idx;
 	}
 
 	private static int decodeFile(int v) {
